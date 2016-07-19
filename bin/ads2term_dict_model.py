@@ -23,6 +23,7 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
     import json
     import codecs
     import re
+    from gensim.parsing.preprocessing import STOPWORDS
     
     print ("Training using file: "+jsonfile)
     
@@ -66,7 +67,7 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
         pickle.dump(processing_rules, f)
 
     print (" * Creating trained model from ADS abstract field")
-    dict_model = terms.UnstructuredTextTermExtractor.train(corpus)
+    dict_model = terms.UnstructuredTextTermExtractor.train(corpus, stop_words=STOPWORDS)
     
     print (" * Writing pickled output to file:"+ output_dict_model)
     with open(output_dict_model, 'wb+') as f:
