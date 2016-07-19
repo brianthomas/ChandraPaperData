@@ -68,7 +68,7 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
     print (" * Creating trained model from ADS abstract field")
     dict_model = terms.UnstructuredTextTermExtractor.train(corpus)
     
-    print (" * Writing pickled output to file:"+ output)
+    print (" * Writing pickled output to file:"+ output_dict_model)
     with open(output_dict_model, 'wb+') as f:
         pickle.dump(dict_model, f)
 
