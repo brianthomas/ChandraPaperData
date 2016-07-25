@@ -21,7 +21,7 @@ special_token_patterns = ['\<ASTROBJ\>[\w|\s|\.|\-|\+]+\<\/ASTROBJ\>', 'NGC\s+\d
 # dictionary
 MIN_TERM_OCCUR = 3
     
-def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_processing_rules_model):
+def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_processing_rules_model, min_term_occur):
     
     import ocio.textmining.extraction as terms
     import pickle
@@ -30,7 +30,7 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
     import re
     from gensim.parsing.preprocessing import STOPWORDS
     
-    print ("Training using file: "+jsonfile)
+    print ("Training using file: "+jsonfile+" with minimum term threshold:"+str(min_term_occur))
     
     print (" * Parsing chandra abstracts file")
     
@@ -73,7 +73,7 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
 
     print (" * Creating trained model from ADS abstract field")
     dict_model = terms.UnstructuredTextTermExtractor.train(corpus, stop_words=STOPWORDS, 
-                                                           min_term_count=MIN_TERM_OCCUR)
+                                                           min_term_count=min_term_occur)
     
     print (" * Writing pickled output to file:"+ output_dict_model)
     with open(output_dict_model, 'wb+') as f:
@@ -89,6 +89,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='OpenData training Appliance -- creates term model (dictionary) from opengov json formatted data.')
     ap.add_argument('-i', '--input', type=str, help='JSON formatted file to pull from')
     ap.add_argument('-m', '--output_dict_model', type=str, help='Output model file to write to (in pickled form)')
+    ap.add_argument('-mt', '--min_term_threshold', type=int, default=MIN_TERM_OCCUR, help='Minimum number of times term must occur in training to be included in the model dictionary ')
     ap.add_argument('-p', '--output_processing_rules_model', type=str, help='Output processing rules model file to write to (in pickled form)')
    
     # parse argv
@@ -109,7 +110,7 @@ if __name__ == '__main__':
         ap.print_usage()
         exit()
 
-    createTermDictionaryFromAbstracts(opts.input, opts.output_dict_model, opts.output_processing_rules_model)
+    createTermDictionaryFromAbstracts(opts.input, opts.output_dict_model, opts.output_processing_rules_model, opts.min_term_threshold)
     
     
     

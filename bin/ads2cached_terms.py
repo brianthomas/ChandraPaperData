@@ -70,7 +70,7 @@ def createTermDictionaryFromAbstracts (input, output, input_dict_model, input_pr
             abstract = abstract.replace (rule, processing_rules[rule])
         LOG.debug("ABSTRACT:"+str(abstract))
         
-        terms = set(term_extractor.find_terms(abstract, highest_colocation=5, 
+        terms = set(term_extractor.find_terms([abstract], highest_colocation=5, 
                                               min_term_count=MIN_TERM_OCCUR, preserve_case=True))
         LOG.debug("TERMS: "+str(terms))
         abstract_terms.append(terms)
