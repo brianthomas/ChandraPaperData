@@ -10,20 +10,33 @@ Created on Jul 12, 2016
 @author: thomas
 '''
 
+import logging
+logging.basicConfig(level=logging.INFO)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
+#logging.getLogger('ocio').setLevel(logging.DEBUG)
+#logging.getLogger('ocio.textmining').setLevel(logging.DEBUG)
+#logging.getLogger('ocio.textmining.extraction').setLevel(logging.DEBUG)
+logging.getLogger('gensim').setLevel(logging.WARN)
+
 # Rules for processing tokens which we may miss with ordinary
 # processing engine. Rules which match will cause all whitespace
 # to be changed into underscores so that the words will be picked
 # up as a group 
 special_token_patterns = ['\<ASTROBJ\>[\w|\s|\.|\-|\+]+\<\/ASTROBJ\>', 'NGC\s+\d+']
 
+# the mininmum times we need a feature to occur
+# before accepting it into our featureset
+MIN_TERM_OCCUR = 1
+
 def createTermDictionaryFromAbstracts (input, output, input_dict_model, input_processing_rules_model):
     
-    import ocio.textmining.extraction as terms
+    from ocio.textmining.extraction import UnstructuredTextTermExtractor
     import pickle
     import json
     import codecs
     
-    print (" * Parsing chandra abstracts file")
+    LOG.info(" * Parsing chandra abstracts file")
     with codecs.open(input,'r',encoding='utf-8') as f:
         chandra_data = json.load(f)
 
@@ -35,9 +48,9 @@ def createTermDictionaryFromAbstracts (input, output, input_dict_model, input_pr
              corpus.append(abstract)
         else:
             pass
-    print ("   Got "+str(len(corpus))+" abstracts to process")
+    LOG.info("   Got "+str(len(corpus))+" abstracts to process")
 
-    print (" * Loading dict and processing rules models")
+    LOG.info(" * Loading dict and processing rules models")
     with open(input_dict_model, 'rb+') as f:
         dict_model = pickle.load (f)
     
@@ -45,9 +58,9 @@ def createTermDictionaryFromAbstracts (input, output, input_dict_model, input_pr
         processing_rules = pickle.load (f)
         
     # our term extractor
-    term_extractor = terms.UnstructuredTextTermExtractor(dict_model)
+    term_extractor = UnstructuredTextTermExtractor(dict_model)
     
-    print (" * Extracting terms by abstract ")
+    LOG.info(" * Extracting terms by abstract ")
     abstract_terms = []
     count = 0
     import time
@@ -55,17 +68,21 @@ def createTermDictionaryFromAbstracts (input, output, input_dict_model, input_pr
         start_time = time.time()
         for rule in processing_rules.keys():
             abstract = abstract.replace (rule, processing_rules[rule])
+        LOG.debug("ABSTRACT:"+str(abstract))
         
-        abstract_terms.append(term_extractor.find_terms(abstract))
+        terms = set(term_extractor.find_terms(abstract, highest_colocation=5, 
+                                              min_term_count=MIN_TERM_OCCUR, preserve_case=True))
+        LOG.debug("TERMS: "+str(terms))
+        abstract_terms.append(terms)
         count = count + 1
         end_time = time.time()
-        print ("did abstract:"+str(count)+" in "+str(end_time-start_time)+" sec") 
+        LOG.info("did abstract:"+str(count)+" in "+str(end_time-start_time)+" sec") 
     
-    print (" * Writing pickled output to file:"+ output)
+    LOG.info(" * Writing pickled output to file:"+ output)
     with open(output, 'wb+') as f:
         pickle.dump(abstract_terms, f)
 
-    print (" * Finished")
+    LOG.info(" * Finished")
 
 if __name__ == '__main__':
     import argparse

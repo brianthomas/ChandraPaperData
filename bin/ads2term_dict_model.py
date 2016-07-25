@@ -15,6 +15,11 @@ Created on Jul 12, 2016
 # to be changed into underscores so that the words will be picked
 # up as a group 
 special_token_patterns = ['\<ASTROBJ\>[\w|\s|\.|\-|\+]+\<\/ASTROBJ\>', 'NGC\s+\d+']
+
+# the minimum number of times a term must occur in training corpus
+# before its considered significant enough to include in the model
+# dictionary
+MIN_TERM_OCCUR = 3
     
 def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_processing_rules_model):
     
@@ -67,7 +72,8 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
         pickle.dump(processing_rules, f)
 
     print (" * Creating trained model from ADS abstract field")
-    dict_model = terms.UnstructuredTextTermExtractor.train(corpus, stop_words=STOPWORDS)
+    dict_model = terms.UnstructuredTextTermExtractor.train(corpus, stop_words=STOPWORDS, 
+                                                           min_term_count=MIN_TERM_OCCUR)
     
     print (" * Writing pickled output to file:"+ output_dict_model)
     with open(output_dict_model, 'wb+') as f:
