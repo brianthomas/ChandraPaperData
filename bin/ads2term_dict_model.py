@@ -61,7 +61,7 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
 
     
     # initialize processing rules from expected patterns
-    processing_rules = chandra_token_repl_patterns + format_token_replacement_patterns
+    processing_rules = dict( chandra_token_repl_patterns, **format_token_replacement_patterns) 
 
     # process our corpus
     corpus = []
