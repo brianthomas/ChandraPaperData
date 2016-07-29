@@ -42,7 +42,6 @@ chandra_token_repl_patterns = { 'H II': 'HII', 'h\s{0,1}ii': 'HII', 'balck': 'bl
     keyword_new = keyword_new.strip('_')
     
 '''
->>>>>>> All capture of some of Emilys processing rules
     
 def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_processing_rules_model, min_term_occur):
     
