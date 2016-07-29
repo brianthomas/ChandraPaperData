@@ -10,16 +10,39 @@ Created on Jul 12, 2016
 @author: thomas
 '''
 
-# Rules for processing tokens which we may miss with ordinary
-# processing engine. Rules which match will cause all whitespace
-# to be changed into underscores so that the words will be picked
-# up as a group 
-special_token_patterns = ['\<ASTROBJ\>[\w|\s|\.|\-|\+]+\<\/ASTROBJ\>', 'NGC\s+\d+']
-
 # the minimum number of times a term must occur in training corpus
 # before its considered significant enough to include in the model
 # dictionary
 MIN_TERM_OCCUR = 3
+
+# Rules for processing tokens which we may miss with ordinary
+# processing engine. Rules which match will cause all whitespace
+# to be changed into underscores so that the words will be picked
+# up as a group 
+special_token_patterns = ['\<ASTROBJ\>[\w|\s|\.|\-|\+]+\<\/ASTROBJ\>', 'NGC\s+\d+', ]
+
+# some common formatting patterns we need to clean out
+format_token_replacement_patterns = { ':': '', '-': ' ', '[': '', ']': '',  '(': '',
+                                      ')': '', '\'': '', '=': '', '&': 'and', '\\': '',  
+                                    } 
+# some replacement patterns germane to just Chandra data
+# includes some particular misspellings and duplications
+chandra_token_repl_patterns = { 'H II': 'HII', 'h\s{0,1}ii': 'HII', 'balck': 'black', 
+                                'intergalacic': 'intergalactic', 'submillimetre': 'submillimeter', 
+                                'centre': 'center', 'agn': 'AGN', 'cd': 'CD', 'disc': 'disk'
+                              }
+
+'''
+    # IF its not all uppercase, then not acronyms, so lets stem it
+    if token_list[j] != token_list[j].upper():
+        token_list[j] = nltk.stem.SnowballStemmer('english').stem(token_list[j])
+        
+    # add underscore to preserve spacing?? -- Ask Emily about this  
+    keyword_new = '_'.join(token_list)
+    keyword_new = keyword_new.strip('_')
+    
+'''
+>>>>>>> All capture of some of Emilys processing rules
     
 def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_processing_rules_model, min_term_occur):
     
@@ -37,33 +60,40 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
     with codecs.open(jsonfile,'r',encoding='utf-8') as f:
         chandra_data = json.load(f)
 
-    corpus = []
-    processing_rules = {}
+    
+    # initialize processing rules from expected patterns
+    processing_rules = chandra_token_repl_patterns + format_token_replacement_patterns
 
+    # process our corpus
+    corpus = []
     for i in range((len(chandra_data))):
         if chandra_data[i]['response']['docs'] != [] and 'abstract' in chandra_data[i]['response']['docs'][0]:
-             # grab the raw abstract
-             abstract = chandra_data[i]['response']['docs'][0]['abstract']
-             # process it to pull out sources, changing spaces to underscore so we make
-             # sure to capture the term fully
-             replacement_labels = {}
-             for pattern in special_token_patterns:
-                 results = re.findall(pattern, abstract)
-                 if results:
-                     for result in results:
-                         #clean up XML-ish formatting
-                         result = re.sub('\<\/?\w+\>','', result)
-                         # replace spaces with underscore so we ensure tokenization
-                         replacement_labels[result] = result.replace(' ','_')
-
-                         # store the processing rule for downstream use
-                         processing_rules[result] = replacement_labels[result]
-
-             for label in replacement_labels.keys():
-                 # now replace the string we find with the one we want
-                 abstract = abstract.replace(label, replacement_labels[label])
-
-             corpus.append(abstract)
+            
+            # grab the raw abstract
+            abstract = chandra_data[i]['response']['docs'][0]['abstract']
+            
+            # process it to pull out sources, changing spaces to underscore so we make
+            # sure to capture the term fully
+            for pattern in special_token_patterns:
+                results = re.findall(pattern, abstract)
+                replacement_labels = {}
+                if results:
+                    for result in results:
+                         
+                        #clean up XML-ish formatting
+                        result = re.sub('\<\/?\w+\>','', result)
+                         
+                        # store the processing rule for downstream use
+                        # replace spaces with underscore so we ensure tokenization
+                        processing_rules[result] = result.replace(' ','_')
+            
+            
+            # apply all of the processing rules now 
+            for rule in processing_rules:
+                abstract = abstract.replace(rule, processing_rules[rule])
+                
+            corpus.append(abstract)
+            
         else:
             pass
 
