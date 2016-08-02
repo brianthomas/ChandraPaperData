@@ -50,7 +50,7 @@ class EnglishStemmer (ote.StemmingTool):
     def stem_tokens(self, token_list):
         from nltk.stem import SnowballStemmer
 
-        stemmer = nltk.stem.SnowballStemmer('english')
+        stemmer = SnowballStemmer('english')
 
         for i in range(len(token_list)):
             # IF its not an acronym, lets stem it
