@@ -42,10 +42,27 @@ chandra_token_repl_patterns = { 'H II': 'HII', 'h\s{0,1}ii': 'HII', 'balck': 'bl
     keyword_new = keyword_new.strip('_')
     
 '''
+
+import ocio.textmining.extraction as ote
+
+class EnglishStemmer (ote.StemmingTool):
+    
+    def stem_tokens(self, token_list):
+        from nltk.stem import SnowballStemmer
+
+        stemmer = nltk.stem.SnowballStemmer('english')
+
+        for i in range(len(token_list)):
+            # IF its not an acronym, lets stem it
+            if token_list[i] != token_list[i].upper():
+                token_list[i] = stemmer.stem(token_list[i])
+         
+        return token_list
+
+    def __init__(self): pass
     
 def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_processing_rules_model, min_term_occur):
     
-    import ocio.textmining.extraction as terms
     import pickle
     import json
     import codecs
@@ -101,7 +118,8 @@ def createTermDictionaryFromAbstracts (jsonfile, output_dict_model, output_proce
         pickle.dump(processing_rules, f)
 
     print (" * Creating trained model from ADS abstract field")
-    dict_model = terms.UnstructuredTextTermExtractor.train(corpus, stop_words=STOPWORDS, 
+    dict_model = ote.UnstructuredTextTermExtractor.train(corpus, stop_words=STOPWORDS, 
+                                                           stemming_tool=EnglishStemmer(),
                                                            min_term_count=min_term_occur)
     
     print (" * Writing pickled output to file:"+ output_dict_model)
